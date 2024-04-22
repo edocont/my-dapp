@@ -1,9 +1,8 @@
+import "./App.css";
 // import MetaMaskSDK from "@metamask/sdk";
 import { useEffect, useState } from "react";
-import "./App.css";
 // Import the analyze function
 import { analyzeSecurity } from "./Chatgpt";
-// const ethers = require("ethers");
 
 // MetaMask SDK initialization
 // const MMSDK = new MetaMaskSDK();
@@ -15,7 +14,9 @@ function App() {
   const [transactionHash, setTransactionHash] = useState('');
   const [transactionDetails, setTransactionDetails] = useState(null);
   const [checkingTransaction, setCheckingTransaction] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(''); 
+  const [analysisResult, setAnalysisResult] = useState('');
+  const [structuredIssues, setStructuredIssues] = useState([]);
+  const [riskScore, setRiskScore] = useState(0);
   const [error, setError] = useState('');
 
   // Function to initiate connection with MetaMask
@@ -49,7 +50,8 @@ function App() {
         }
         
         // Informing the user that the connection is being attempted
-        setError("Connecting to MetaMask...");
+        // setError("Connecting to MetaMask" + <span className="loading-dots">...</span>);
+        setError(<>Connecting to MetaMask<div className="spinner"></div></>);
         setIsConnected(false);
 
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -87,6 +89,9 @@ function App() {
     try {
       const response = await fetch(transactionUrl);
       const data = await response.json();
+
+      // Uncomment the line below to view OpenAI transaction on console, if necessary
+      // console.log("API Response:", JSON.stringify(response, null, 2));
   
       if (data.result) {
         setTransactionDetails(data.result);
@@ -101,23 +106,44 @@ function App() {
             // Parse the source code, removing surrounding array characters if they exist
             let sourceCode = contractSourceData.result[0].SourceCode;
             if (sourceCode.startsWith('[') && sourceCode.endsWith(']')) {
-              sourceCode = JSON.parse(sourceCode)[0]; // Parsing the source code when it's provided as a JSON string
+              sourceCode = JSON.parse(sourceCode)[0];
             }
   
             // Perform security analysis on the source code
-            console.log("Calling analyzeSecurity with", sourceCode, transactionHash, JSON.stringify(data.result));
-            try {
-              console.log(sourceCode);
-              const analysis = await analyzeSecurity(sourceCode, transactionHash, JSON.stringify(data.result)); // Utilizing the new analysis function
-              setAnalysisResult(analysis);
-            } catch (analysisError) {
-              console.error("Error during analysis:", analysisError);
-              setError("Analysis failed: " + analysisError.message);
-              setAnalysisResult("Analysis failed. Please try again.");
+            const analysis = await analyzeSecurity(sourceCode, transactionHash, JSON.stringify(data.result));
+            setAnalysisResult(analysis);
+
+            // Parsing the analysis result
+            const issues = analysis.split('\n')
+              .map(issue => {
+                // Updated regex to handle optional spaces before the brackets and to ensure all descriptions are captured correctly
+                const match = issue.match(/^(.*?): (.*?) \[(\d)\]$/);
+                if (match) {
+                  return {
+                    description: match[2].trim(), // Captures everything up to the severity bracket
+                    severity: parseInt(match[3]) // Captures the severity level
+                  };
+                }
+                return null;
+              }).filter(issue => issue !== null);
+            setStructuredIssues(issues);
+
+            // Calculate the average risk score from the analysis result
+            const matches = analysis.match(/\[\d\]/g);
+            const riskLevels = matches ? matches.map(level => parseInt(level.replace(/[\[\]]/g, ''))) : [];
+            
+            if (riskLevels.length > 0) {
+              const averageRisk = riskLevels.reduce((acc, curr) => acc + curr, 0) / riskLevels.length;
+              setRiskScore(Math.round(averageRisk * 4) / 4); // Rounding to the nearest 0.25
+            } else {
+              setRiskScore(0); // Set a default or fallback risk score if no risk levels are found
             }
           } else {
             setAnalysisResult("No verified source code found at this address or it's not a contract.");
           }
+        } else {
+          setError("Transaction details not found.");
+          setAnalysisResult("Unable to perform security analysis.");
         }
       } else {
         setError("Transaction details not found.");
@@ -125,12 +151,16 @@ function App() {
       }
     } catch (error) {
       console.error("Failed to fetch transaction details:", error);
-      setError("Failed to fetch transaction details");
-      setAnalysisResult("Analysis failed due to network error.");
+      setError("Failed to fetch transaction details", error.message);
+      setAnalysisResult("Analysis failed due to network error. Please try again.");
     } finally {
       setCheckingTransaction(false);
     }
   };
+
+  // CSS for the risk indicator bar
+  const riskIndicatorPosition = `${(riskScore / 5) * 100}%`; // Converts the risk score to a percentage for positioning
+
   
   return (
     <div className="container">
@@ -160,7 +190,21 @@ function App() {
       {analysisResult && (
         <div>
           <h2>Analysis Result:</h2>
+          <p>The level of risk of this contract is: {riskScore}</p>
+          <div className="risk-indicator-bar">
+            <div className="risk-indicator" style={{ left: riskIndicatorPosition }}></div>
+          </div>
           <p>{analysisResult}</p>
+          {/* Here we display the structured issues */}
+          <div className="analysis-issues">
+            <h3>Identified Issues:</h3>
+            {structuredIssues.map((issue, index) => (
+              <div key={index} className="issue">
+                <p>{issue.description}</p>
+                <p>Severity: {issue.severity}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

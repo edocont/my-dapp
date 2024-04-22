@@ -15,7 +15,7 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant trained and highly skilled and knowledgbale in smart contract security. Analyze the given smart contract code and transaction details for potential security issues, vulnerabilities, or risks. List them in paragraph separated topics, with at the end of each paragraph a box [] with a number from 0 to 5 inside indicating the level of security threat of that specific vulnerability, where 0 is 'Very negligible, almost for sure not a security threat' and 5 is 'Extremely severe security threat, should not at all execute the contract. Make sure that the output is in plain text and that each topic is separated by a paragraph.'"
+          content: "You are a helpful assistant trained and highly skilled in smart contract security analysis. I need you to list potential security issues found in the provided smart contract code, formatted as follows: Start each issue with a number followed by a colon and the title of the issue, followed again by a colon. Describe the issue succinctly. End each issue description with a severity level in square brackets (e.g., '[3]'). The severity levels range from 0 (negligible) to 5 (critical). Do not include any headers, footers, or additional text. Each issue should be on a new line for easy parsing."
         },
         {
           role: "user",
@@ -25,7 +25,7 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
         },
         {
           role: "assistant", // Initial assistant message setting expectations of the task.
-          content: "I will analyze the smart contract code and transaction details for security risks."
+          content: "Analyzing the smart contract code and transaction details for security risks. I will provide a list of issues with their respective security threat levels."
         }
         // The assistant's detailed analysis will be generated based on the above messages.
       ],
