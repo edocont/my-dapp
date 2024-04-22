@@ -1,4 +1,3 @@
-// Import the OpenAI library to interact with the OpenAI API.
 import OpenAI from "openai";
 
 // Initialize the OpenAI client with your API key and configure it to allow browser-side usage,
@@ -10,21 +9,19 @@ const openai = new OpenAI({
 // Define an asynchronous function to analyze security vulnerabilities in a smart contract using the OpenAI API.
 export async function analyzeSecurity(contractCode, transactionHash, transactionDetails) {
   try {
-    console.log("Received contract code:", contractCode);
-    console.log("Received transaction hash:", transactionHash);
-    console.log("Received transaction details:", transactionDetails);
     // Call to the OpenAI API to create a new chat completion.
-    // The assistant's detailed analysis will be generated based on the following messages.
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo", 
       messages: [
         {
-          role: "system", // System message to set the context for the AI.
-          content: "You are a helpful assistant trained in smart contract security. Analyze the given smart contract code and transaction details for potential security issues, vulnerabilities, or risks."
+          role: "system",
+          content: "You are a helpful assistant trained and highly skilled and knowledgbale in smart contract security. Analyze the given smart contract code and transaction details for potential security issues, vulnerabilities, or risks. List them in paragraph separated topics, with at the end of each paragraph a box [] with a number from 0 to 5 inside indicating the level of security threat of that specific vulnerability, where 0 is 'Very negligible, almost for sure not a security threat' and 5 is 'Extremely severe security threat, should not at all execute the contract. Make sure that the output is in plain text and that each topic is separated by a paragraph.'"
         },
         {
-          role: "user", // User message containing the actual data to analyze.
-          content: `Contract Code:\n${contractCode}\nTransaction Hash: ${transactionHash}\nTransaction Details:\n${transactionDetails}`
+          role: "user",
+          content: `Contract Code:\n${contractCode}\n
+                    Transaction Hash: ${transactionHash}\n
+                    Transaction Details:\n${transactionDetails}`
         },
         {
           role: "assistant", // Initial assistant message setting expectations of the task.
@@ -38,18 +35,9 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
       frequency_penalty: 0,
       presence_penalty: 0, 
     });
+    
     console.log("API Response:", JSON.stringify(response, null, 2));
-    // Extract and return the assistant's analysis from the response.
-    // const analysis = response.data.choices[0].message.content;
-    // return analysis;
-    console.log("Received response from OpenAI:", response); // Immediately after receiving the response
-    const messages = response.choices[0].message.content;
-    console.log("Prepared messages for OpenAI:", messages); // After setting up messages array
-    // const assistantMessages = messages.filter(m => m.role === 'assistant');
-    // console.log("Filtered assistant messages:", assistantMessages); // After filtering messages
-    // const lastMessage = assistantMessages[assistantMessages.length - 1];
-    // console.log("Extracted analysis:", messages.content);
-    return messages;
+    return response.choices[0].message.content;
 
   } catch (error) {
     // Log and rethrow the error if the API call fails.

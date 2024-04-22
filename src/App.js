@@ -9,12 +9,6 @@ import { analyzeSecurity } from "./Chatgpt";
 // const MMSDK = new MetaMaskSDK();
 // const ethereum = MMSDK.getProvider(); // You can also access via window.ethereum
 
-// Temporary mock function to simulate behavior
-async function mockAnalyzeSecurity(contractCode, transactionHash, transactionDetails) {
-  console.log("Mock inputs received:", { contractCode, transactionHash, transactionDetails });
-  return "This is a simulated response based on mock input data.";
-}
-
 function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [currentAccount, setCurrentAccount] = useState(null);
@@ -23,31 +17,65 @@ function App() {
   const [checkingTransaction, setCheckingTransaction] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(''); 
   const [error, setError] = useState('');
-  
+
+  // Function to initiate connection with MetaMask
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          setCurrentAccount(accounts[0]);
+          setIsConnected(true);
+          setError(`Connected: ${accounts[0]}`);
+        } else {
+          setError("No accounts found. Please ensure MetaMask is unlocked.");
+        }
+      } catch (error) {
+        setError("Failed to connect to MetaMask. Please try again.");
+        console.error("MetaMask connection error:", error);
+      }
+    } else {
+      setError("MetaMask is not detected. Please install MetaMask.");
+    }
+  };
+
   // Check if MetaMask is connected and fetch the current account
   useEffect(() => {
     const checkIfWalletIsConnected = async () => {
       try {
-        if (window.ethereum) {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          if (accounts.length > 0) {
-            setCurrentAccount(accounts[0]);
-            setIsConnected(true);
-          }
-        } else {
+        if (!window.ethereum) {
           alert("MetaMask is not detected. Please install MetaMask.");
+          return;
+        }
+        
+        // Informing the user that the connection is being attempted
+        setError("Connecting to MetaMask...");
+        setIsConnected(false);
+
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts.length > 0) {
+          setCurrentAccount(accounts[0]);
+          setIsConnected(true);
+          setError(`Connected to ${accounts[0]}`);
+        } else {
+          setError("No accounts found. Please ensure MetaMask is unlocked.");
         }
       } catch (error) {
-        setError("Failed to connect to Metamask");
+        console.error("Failed to connect to MetaMask", error);
+        setError("Failed to connect to MetaMask. Please ensure MetaMask is unlocked and refresh the page.");
       }
-    };
+  };
 
-    checkIfWalletIsConnected();
-  }, []);
+  checkIfWalletIsConnected();
+}, []);
 
   // Function to handle form submission, fetch transaction details and security analysis
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!isConnected) {
+      setError("Please connect to MetaMask first.");
+      return;
+    }
     setCheckingTransaction(true);
     setTransactionDetails(null);
     setAnalysisResult('');
@@ -107,6 +135,9 @@ function App() {
   return (
     <div className="container">
       <h1>Transaction Security Checker</h1>
+      {!isConnected && (
+        <button onClick={connectWallet}>Connect Wallet</button>
+      )}
       <form onSubmit={handleSubmit}>
         <input
           type="text"
@@ -114,7 +145,7 @@ function App() {
           onChange={(e) => setTransactionHash(e.target.value)}
           placeholder="Enter transaction hash"
         />
-        <button type="submit" disabled={checkingTransaction}>Check Transaction</button>
+        <button type="submit" disabled={checkingTransaction || !isConnected}>Check Transaction</button>
       </form>
       
       {error && <p className="status-message error">{error}</p>}
