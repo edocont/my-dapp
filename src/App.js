@@ -95,7 +95,6 @@ function App() {
     try {
       const response = await fetch(transactionUrl);
       const data = await response.json();
-
       // Uncomment the line below to view OpenAI transaction on console, if necessary
       // console.log("API Response:", JSON.stringify(response, null, 2));
   
@@ -111,6 +110,7 @@ function App() {
           if (contractSourceData.result && contractSourceData.result[0].SourceCode !== '0x') {
             // Parse the source code, removing surrounding array characters if they exist
             let sourceCode = contractSourceData.result[0].SourceCode;
+            console.log(sourceCode);
             if (sourceCode.startsWith('[') && sourceCode.endsWith(']')) {
               sourceCode = JSON.parse(sourceCode)[0];
             }
