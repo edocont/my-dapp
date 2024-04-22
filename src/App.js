@@ -19,6 +19,8 @@ function App() {
   const [riskScore, setRiskScore] = useState(0);
   const [error, setError] = useState('');
 
+  const [dynamicContent, setDynamicContent] = useState(null);
+
   // Function to initiate connection with MetaMask
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -50,8 +52,9 @@ function App() {
         }
         
         // Informing the user that the connection is being attempted
-        // setError("Connecting to MetaMask" + <span className="loading-dots">...</span>);
-        setError(<>Connecting to MetaMask<div className="spinner"></div></>);
+        setError("Connecting to MetaMask");
+        setDynamicContent(<span className="loading-dots">...</span>);
+        // setError(<>Connecting to MetaMask<div className="spinner"></div></>);
         setIsConnected(false);
 
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -59,6 +62,7 @@ function App() {
           setCurrentAccount(accounts[0]);
           setIsConnected(true);
           setError(`Connected to ${accounts[0]}`);
+          setDynamicContent(null);
         } else {
           setError("No accounts found. Please ensure MetaMask is unlocked.");
         }
@@ -81,6 +85,8 @@ function App() {
     setCheckingTransaction(true);
     setTransactionDetails(null);
     setAnalysisResult('');
+    setStructuredIssues([]);
+    setRiskScore(0);
     setError('');
   
     const ETHERSCAN_API_KEY = process.env.REACT_APP_ETHERSCAN_API_KEY;
@@ -114,22 +120,26 @@ function App() {
             setAnalysisResult(analysis);
 
             // Parsing the analysis result
-            const issues = analysis.split('\n')
-              .map(issue => {
-                // Updated regex to handle optional spaces before the brackets and to ensure all descriptions are captured correctly
-                const match = issue.match(/^(.*?): (.*?) \[(\d)\]$/);
-                if (match) {
-                  return {
-                    description: match[2].trim(), // Captures everything up to the severity bracket
-                    severity: parseInt(match[3]) // Captures the severity level
-                  };
-                }
-                return null;
-              }).filter(issue => issue !== null);
+            // Assuming `analysisResult` is a string containing all issues separated by double newlines
+            const issues = analysis.split('\n\n')
+            .map(issue => {
+              // Regex to extract number, title, description, and severity
+              const match = issue.match(/^(\d+): (.*?): (.*) \[(\d+)\]$/);
+              if (match) {
+                const [_, number, title, description, severity] = match
+                return {
+                  number: parseInt(number),              // Issue number
+                  title: title.trim(),                   // Issue title
+                  description: description.trim(),       // Issue description
+                  severity: parseInt(severity)           // Severity level
+                };
+              }
+              return null;
+            }).filter(issue => issue !== null);
             setStructuredIssues(issues);
 
             // Calculate the average risk score from the analysis result
-            const matches = analysis.match(/\[\d\]/g);
+            const matches = analysis.match(/\[\d+\]/g);
             const riskLevels = matches ? matches.map(level => parseInt(level.replace(/[\[\]]/g, ''))) : [];
             
             if (riskLevels.length > 0) {
@@ -179,7 +189,9 @@ function App() {
       </form>
       
       {error && <p className="status-message error">{error}</p>}
-      {checkingTransaction && <p className="status-message">Checking transaction...</p>}
+      {dynamicContent}
+      {checkingTransaction && <p className="status-message">Checking transaction
+      <span className="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>}
       {transactionDetails && (
         <div className="transaction-details">
           <h2>Transaction Details:</h2>
@@ -187,21 +199,20 @@ function App() {
           {/* Display other details as needed */}
         </div>
       )}
-      {analysisResult && (
+      {structuredIssues.length > 0 && (
         <div>
           <h2>Analysis Result:</h2>
           <p>The level of risk of this contract is: {riskScore}</p>
           <div className="risk-indicator-bar">
             <div className="risk-indicator" style={{ left: riskIndicatorPosition }}></div>
           </div>
-          <p>{analysisResult}</p>
           {/* Here we display the structured issues */}
           <div className="analysis-issues">
             <h3>Identified Issues:</h3>
             {structuredIssues.map((issue, index) => (
-              <div key={index} className="issue">
-                <p>{issue.description}</p>
-                <p>Severity: {issue.severity}</p>
+              <div key={index} className="issue-box">
+                <p>{issue.title}: {issue.description}</p>
+                <p>Severity: <strong>{issue.severity}</strong></p>
               </div>
             ))}
           </div>

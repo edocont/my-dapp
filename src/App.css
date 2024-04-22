@@ -106,9 +106,9 @@ p, .status-message, .transaction-details {
 .status-message {
   margin-top: 20px;
   padding: 10px;
-  background-color: #dff0d8; /* Light green background for positive messages */
-  color: #3c763d; /* Dark green text color for contrast */
-  border: 1px solid #d6e9c6;
+  background-color: #d8e4f0; /* Light green background for positive messages */
+  color: #3c6276; /* Dark green text color for contrast */
+  border: 1px solid #c6e0e9;
   border-radius: 4px;
 }
 
@@ -156,38 +156,43 @@ p, .status-message, .transaction-details {
   margin-bottom: 20px; /* Adds space between paragraphs */
 }
 
+.loading-dots > span {
+  display: inline-block;
+  font-size: 20px;
+  opacity: 0;  /* Ensure dots start as invisible */
+  animation: dots 2s linear infinite;  /* Shortened the duration from 4s to 2s */
+}
+
 @keyframes dots {
-  0%, 20% {
-    color: rgba(0,0,0,0);
-    text-shadow:
-      .25em 0 0 rgba(0,0,0,0),
-      .5em 0 0 rgba(0,0,0,0);
+  0%, 100% {
+    opacity: 0;
   }
-  40% {
-    color: black;
-    text-shadow:
-      .25em 0 0 rgba(0,0,0,0),
-      .5em 0 0 rgba(0,0,0,0);
+  5%, 85% { /* Adjusted percentage timings for faster display and reset */
+    opacity: 1;
   }
-  60% {
-    text-shadow:
-      .25em 0 0 black,
-      .5em 0 0 rgba(0,0,0,0);
+  10%, 85% { 
+    opacity: 1;
   }
-  80%, 100% {
-    text-shadow:
-      .25em 0 0 black,
-      .5em 0 0 black;
+  15%, 85% { 
+    opacity: 1;
+  }
+  85%, 100% { /* All dots disappear together before the animation restarts */
+    opacity: 0;
   }
 }
 
-.loading-dots {
-  display: inline-block;
-  font-size: 20px;
-  line-height: 1;
-  margin-left: 5px;
-  animation: dots 1.5s steps(5, end) infinite;
+.loading-dots > span:nth-child(1) {
+  animation-delay: 0s;  /* No delay for the first dot */
 }
+
+.loading-dots > span:nth-child(2) {
+  animation-delay: 0.2s;  /* Shortened delay for the second dot from 0.3s to 0.2s */
+}
+
+.loading-dots > span:nth-child(3) {
+  animation-delay: 0.4s;  /* Shortened delay for the third dot from 0.6s to 0.4s */
+}
+
 
 .spinner {
   border: 4px solid rgba(0,0,0,0.1);
@@ -205,4 +210,20 @@ p, .status-message, .transaction-details {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.issue-box {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f5f5f5; /* Light grey background */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 4px; /* Rounded corners */
+}
+
+.issue-box p {
+  margin: 5px 0; /* Vertical spacing for paragraphs */
+}
+
+.issue-box p strong {
+  font-weight: bold; /* Bold font for severity level */
 }

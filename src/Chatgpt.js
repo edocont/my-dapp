@@ -15,7 +15,11 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant trained and highly skilled in smart contract security analysis. I need you to list potential security issues found in the provided smart contract code, formatted as follows: Start each issue with a number followed by a colon and the title of the issue, followed again by a colon. Describe the issue succinctly. End each issue description with a severity level in square brackets (e.g., '[3]'). The severity levels range from 0 (negligible) to 5 (critical). Do not include any headers, footers, or additional text. Each issue should be on a new line for easy parsing."
+          content: "You are a helpful assistant trained and highly skilled in smart contract security analysis. I need you to list potential security issues found in the provided smart contract code, formatted as follows: Start each issue with a number followed by a colon and the title of the issue, followed again by a colon. Describe the issue succinctly. End each issue description with a severity level in square brackets (e.g., '[3]'). The severity levels range from 0 (negligible) to 5 (critical). Then, provide the next issue separated by a paragraph. That is, for each issue, format it as follows:\n\n" +
+          
+          "\"Number: Title: Description [Severity]\"\n\n" +
+          
+          "Do not include any headers, footers, or additional text. Use a single line for each issue and ensure there is a clear separation between the description and severity by a single space before the severity level, enclosed in squared brackets"
         },
         {
           role: "user",
@@ -29,11 +33,11 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
         }
         // The assistant's detailed analysis will be generated based on the above messages.
       ],
-      temperature: 0.7, // Sets the creativity level of the responses
+      temperature: 0.4, // Sets the creativity level of the responses
       max_tokens: 2048, 
       top_p: 1, 
-      frequency_penalty: 0,
-      presence_penalty: 0, 
+      frequency_penalty: 0.1,
+      presence_penalty: 0.2, 
     });
     
     console.log("API Response:", JSON.stringify(response, null, 2));
