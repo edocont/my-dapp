@@ -7,11 +7,10 @@ const openai = new OpenAI({
 });
 
 // Define an asynchronous function to analyze security vulnerabilities in a smart contract using the OpenAI API.
-export async function analyzeSecurity(contractCode, transactionHash, transactionDetails) {
+export async function analyzeSecurity(contractCode, transactionHash, transactionDetails, modelVersion) {
   try {
-    // Call to the OpenAI API to create a new chat completion.
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", 
+      model: modelVersion,  // Use the model version passed as a parameter
       messages: [
         {
           role: "system",
@@ -31,23 +30,22 @@ export async function analyzeSecurity(contractCode, transactionHash, transaction
           role: "assistant", // Initial assistant message setting expectations of the task.
           content: "Analyzing the smart contract code and transaction details for security risks. I will provide a list of issues with their respective security threat levels."
         }
-        // The assistant's detailed analysis will be generated based on the above messages.
       ],
-      temperature: 0.4, // Sets the creativity level of the responses
-      max_tokens: 2048, 
-      top_p: 1, 
+      temperature: 0.4,
+      max_tokens: 2048,
+      top_p: 1,
       frequency_penalty: 0.1,
-      presence_penalty: 0.2, 
+      presence_penalty: 0.2,
     });
     
     console.log("API Response:", JSON.stringify(response, null, 2));
     return response.choices[0].message.content;
 
   } catch (error) {
-    // Log and rethrow the error if the API call fails.
     console.error('Error during analysis with OpenAI:', error);
     throw error;
   }
 }
+
 
 

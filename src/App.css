@@ -104,6 +104,7 @@ p, .status-message, .transaction-details {
 }
 
 .status-message {
+  min-height: 50px;  /*Ensures there's always space for the message, even when it's empty*/
   margin-top: 20px;
   padding: 10px;
   background-color: #d8e4f0; /* Light green background for positive messages */
@@ -117,6 +118,7 @@ p, .status-message, .transaction-details {
   color: #a94442; /* Dark red text for contrast */
   border: 1px solid #ebccd1;
 }
+
 
 .transaction-details {
   margin-top: 20px;
@@ -227,3 +229,50 @@ p, .status-message, .transaction-details {
 .issue-box p strong {
   font-weight: bold; /* Bold font for severity level */
 }
+
+.button-group {
+  text-align: center; /* Center the model buttons */
+  margin: 10px 0; /* Provide some space around the buttons */
+}
+
+.submit-button-container {
+  text-align: right; /* Align the submit button to the right */
+  margin-top: 10px; /* Space above the submit button */
+}
+
+.model-button {
+  margin: 0 10px; /* Horizontal space between buttons */
+  display: inline-block; /* Align buttons in a single row */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.model-button.purple {
+  background-color: #6a1b9a;
+}
+
+.model-button.green {
+  background-color: #388e3c;
+}
+
+.model-button:hover {
+  opacity: 0.8;
+}
+
+.model-button {
+  opacity: 0.6; /* Lower opacity by default */
+  transition: opacity 0.2s ease; /* Smooth transition for opacity change */
+}
+
+.model-button.active {
+  opacity: 1; /* Full opacity for active button */
+}
+
+.model-button:hover {
+  opacity: 0.8; /* Slightly higher opacity on hover for non-active buttons */
+}
+
